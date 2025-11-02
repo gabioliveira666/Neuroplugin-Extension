@@ -1,60 +1,110 @@
 document.addEventListener("DOMContentLoaded", function () {
-  const modoDestacado = document.getElementById("modoDestacado");
-  const modoEspacado = document.getElementById("modoEspacado");
-  const protanomalia = document.getElementById("protanomalia");
-  const deuteranomalia = document.getElementById("deuteranomalia");
-  const tritanopia = document.getElementById("tritanopia");
+  const btns = {
+    modoFoco: document.getElementById("modoFoco"),
+    modoEspacado: document.getElementById("modoEspacado"),
+    modoSimplificado: document.getElementById("modoSimplificado"),
+    protanomalia: document.getElementById("protanomalia"),
+    deuteranomalia: document.getElementById("deuteranomalia"),
+    tritanomalia: document.getElementById("tritanomalia"),
+    toggleExtensao: document.getElementById("toggleExtensao"),
+    resetar: document.getElementById("resetar"),
+  };
 
+  // ---------- Atualiza visual do botão ----------
+  function setButtonState(button, isOn) {
+    if (!button) return;
+    if (button === btns.toggleExtensao) {
+      button.textContent = isOn ? "On" : "Off";
+      button.classList.toggle("off", !isOn);
+      button.classList.toggle("on", isOn);
+    } else {
+      button.style.backgroundColor = isOn ? "#4caf50" : "#ddd";
+      button.style.color = isOn ? "white" : "#222";
+    }
+  }
 
-  // Carregar configurações salvas
-  chrome.storage.sync.get([
-    "modoDestacado", "modoEspacado", 
-    "protanomalia", "deuteranomalia", "tritanopia"
-  ], function (data) {
-    modoDestacado.checked = data.modoDestacado || false;
-    modoEspacado.checked = data.modoEspacado || false;
-    protanomalia.checked = data.protanomalia || false;
-    deuteranomalia.checked = data.deuteranomalia || false;
-    tritanopia.checked = data.tritanopia || false;
-  });
-
-  // Função para salvar e aplicar preferências
-  function atualizarPreferencias() {
-    console.log("Preferências atualizadas!");
-  
-    chrome.storage.sync.set({
-      modoDestacado: modoDestacado.checked,
-      modoEspacado: modoEspacado.checked,
-      protanomalia: protanomalia.checked,
-      deuteranomalia: deuteranomalia.checked,
-      tritanopia: tritanopia.checked
-    }, function () {
-      chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-        chrome.tabs.sendMessage(tabs[0].id, { action: "atualizarEstilo" });
+  // ---------- Salva no storage e envia mensagem ----------
+  function saveAndUpdateStorage(key, value) {
+    chrome.storage.sync.set({ [key]: value }, () => {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs.length > 0) {
+          chrome.tabs.sendMessage(tabs[0].id, { action: "atualizarEstilo" }, (response) => {
+            if (chrome.runtime.lastError) {
+              console.warn("Content script não disponível");
+            }
+          });
+        }
       });
     });
   }
 
-  // Listener para detectar alterações nos checkboxes e salvar preferências
-  modoDestacado.addEventListener("change", function () {
-    console.log("Modo Destacado alterado");
-    atualizarPreferencias();
+  // ---------- Carrega estado inicial ----------
+  chrome.storage.sync.get(null, (data) => {
+    const extensaoAtiva = data.extensaoAtiva !== false; // padrão = true
+    setButtonState(btns.toggleExtensao, extensaoAtiva);
+
+    [
+      "modoFoco", "modoEspacado", "modoSimplificado",
+      "protanomalia", "deuteranomalia", "tritanomalia"
+    ].forEach((key) => {
+      setButtonState(btns[key], data[key] || false);
+    });
   });
-  modoEspacado.addEventListener("change", function () {
-    console.log("Modo Espacado alterado");
-    atualizarPreferencias();
+
+  // ---------- Toggle Extensão On/Off ----------
+  btns.toggleExtensao.addEventListener("click", () => {
+    const isOn = btns.toggleExtensao.textContent === "Off";
+    setButtonState(btns.toggleExtensao, isOn);
+    saveAndUpdateStorage("extensaoAtiva", isOn);
   });
-  protanomalia.addEventListener("change", function () {
-    console.log("Protanomalia alterada");
-    atualizarPreferencias();
+
+  // ---------- Toggle modos ----------
+  [
+    "modoFoco", "modoEspacado", "modoSimplificado",
+    "protanomalia", "deuteranomalia", "tritanomalia"
+  ].forEach((key) => {
+    const btn = btns[key];
+    if (!btn) return;
+    btn.addEventListener("click", () => {
+      const style = window.getComputedStyle(btn);
+      const isOn = style.backgroundColor !== "rgb(76, 175, 80)"; // verde
+      setButtonState(btn, isOn);
+      saveAndUpdateStorage(key, isOn);
+    });
   });
-  deuteranomalia.addEventListener("change", function () {
-    console.log("Deuteranomalia alterada");
-    atualizarPreferencias();
-  });
-  tritanopia.addEventListener("change", function () {
-    console.log("Tritanopia alterada");
-    atualizarPreferencias();
+
+  // ---------- Botão Reset ----------
+  btns.resetar.addEventListener("click", () => {
+    setButtonState(btns.toggleExtensao, false);
+
+    [
+      "modoFoco", "modoEspacado", "modoSimplificado",
+      "protanomalia", "deuteranomalia", "tritanomalia"
+    ].forEach((key) => {
+      setButtonState(btns[key], false);
+    });
+
+    const defaultState = {
+      extensaoAtiva: false,
+      modoFoco: false,
+      modoEspacado: false,
+      modoSimplificado: false,
+      protanomalia: false,
+      deuteranomalia: false,
+      tritanomalia: false,
+    };
+
+    chrome.storage.sync.set(defaultState, () => {
+      // Consulta aba antes de enviar mensagem
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs.length > 0) {
+          chrome.tabs.sendMessage(tabs[0].id, { action: "atualizarEstilo" }, (response) => {
+            if (chrome.runtime.lastError) {
+              console.warn("Content script não disponível");
+            }
+          });
+        }
+      });
+    });
   });
 });
-

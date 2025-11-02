@@ -1,34 +1,108 @@
+/* Reset básico e fonte */
+* {
+  box-sizing: border-box;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
 body {
-    background-color: #1e1e1e;
-    color: #ffffff;
-    font-family: Arial, sans-serif;
-    padding: 16px;
-    margin: 0;
+  background-color: #121212;
+  color: #e0e0e0;
+  margin: 15px;
+  width: 280px;
+  user-select: none;
 }
 
-h2 {
-    margin-bottom: 16px;
-    font-size: 18px;
-    color: #f0f0f0;
+/* Título */
+h1 {
+  font-size: 22px;
+  color: #4caf50;
+  margin-bottom: 20px;
+  text-align: center;
+  font-weight: 700;
 }
 
-label {
-    display: block;
-    margin-bottom: 12px;
-    font-size: 14px;
-    cursor: pointer;
+/* Container para grupos de botões */
+.button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
 }
 
-input[type="checkbox"] {
-    margin-right: 8px;
-    transform: scale(1.2);
+/* Botões arredondados para modos */
+button, .toggle-btn {
+  cursor: pointer;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  background-color: #333;
+  color: #e0e0e0;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  user-select: none;
+  min-width: 100px;
+  text-align: center;
 }
 
-input[type="checkbox"]:focus {
-    outline: 2px solid #4caf50;
+button:hover, .toggle-btn:hover {
+  background-color: #4caf50;
+  color: #121212;
 }
 
+/* Botão ON/OFF especial */
+.toggle-btn {
+  width: 100%;
+  background-color: #d9534f; /* Off vermelho */
+  font-size: 16px;
+  border-radius: 30px;
+  margin-bottom: 20px;
+  font-weight: 700;
+  color: white;
+}
+
+.toggle-btn.on {
+  background-color: #4caf50; /* On verde */
+}
+
+/* Botão reset */
+#resetar {
+  margin-top: 10px;
+  width: 100%;
+  padding: 12px 0;
+  background-color: #d9534f;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.3s ease;
+}
+
+#resetar:hover,
+#resetar:focus-visible {
+  background-color: #c9302c;
+  outline: none;
+}
+
+/* Seleção de texto */
 ::selection {
-    background: #4caf50;
-    color: #000;
+  background-color: #81c784;
+  color: #121212;
 }
+
+/* =========================
+   ESTILO PARA MODO FOCO
+   ========================= */
+.highlight {
+  background: none !important;  /* garante que não haja fundo amarelo residual */
+  color: inherit !important;     /* mantém cor do texto */
+}
+
+.highlight strong {
+  font-weight: 700;              /* primeiras letras em negrito */
+  color: inherit;                /* mantém a cor do texto */
+}
+

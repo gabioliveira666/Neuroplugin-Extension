@@ -1,29 +1,130 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Configurações</title>
-  <link rel="stylesheet" href="styles.css" />
+  <title>Neuroplugin</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 15px;
+      width: 280px;
+      background: #fefefe;
+      color: #222;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    /* Container das seções */
+    .section {
+      margin-bottom: 20px;
+    }
+
+    /* Título das seções */
+    .section-label {
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: block;
+      font-size: 1.1rem;
+    }
+
+    /* Botões arredondados */
+    button, .toggle-btn {
+      cursor: pointer;
+      padding: 8px 16px;
+      margin: 5px 5px 5px 0;
+      border: none;
+      border-radius: 20px;
+      font-size: 14px;
+      background-color: #ddd;
+      color: #222;
+      transition: background-color 0.3s ease;
+      user-select: none;
+    }
+
+    button:hover, .toggle-btn:hover {
+      background-color: #bbb;
+    }
+
+    /* Botão ON/OFF especial */
+    .toggle-btn {
+      width: 100%;
+      background-color: #4caf50;
+      color: white;
+      font-weight: 700;
+      font-size: 16px;
+      border-radius: 30px;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    .toggle-btn.off {
+      background-color: #d9534f;
+    }
+
+    /* Container para botões em grupo */
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    /* Botão reset */
+    #resetar {
+      width: 100%;
+      background-color: #d9534f;
+      color: white;
+      font-weight: 700;
+      border-radius: 30px;
+      padding: 10px 0;
+      border: none;
+      font-size: 16px;
+      margin-top: 10px;
+      transition: background-color 0.3s ease;
+    }
+
+    #resetar:hover {
+      background-color: #c9302c;
+    }
+  </style>
 </head>
 <body>
-  <h2>Personalização</h2>
 
-  <form>
-    <fieldset>
-      <legend>Preferências de Acessibilidade</legend>
+    <h1>Neuroplugin</h1>
 
-      <input type="checkbox" id="modoDestacado"> Modo Destacado</label><br>
-      <input type="checkbox" id="modoEspacado"> Fonte Espaçada</label><br>
-      <input type="checkbox" id="protanomalia"> Corrigir Protanomalia</label><br>
-      <input type="checkbox" id="deuteranomalia"> Corrigir Deuteranomalia</label><br>
-      <input type="checkbox" id="tritanopia"> Corrigir Tritanopia</label><br>
+  <!-- Botão ON/OFF -->
+  <button id="toggleExtensao" class="toggle-btn off">Off</button>
 
+  <!-- Fonte -->
+  <div class="section">
+    <label class="section-label">Fonte</label>
+    <div class="button-group">
+      <button id="modoFoco">Foco</button>
+      <button id="modoSimplificado">Simplificada</button>
+      <button id="modoEspacado">Espaçada</button>
+    </div>
+  </div>
 
-    </fieldset>
-  </form>
+  <!-- Cores -->
+  <div class="section">
+    <label class="section-label">Cores</label>
+    <div class="button-group">
+      <button id="protanomalia">Protanomalia</button>
+      <button id="tritanomalia">Tritanomalia</button>
+      <button id="deuteranomalia">Deuteranomalia</button>
+    </div>
+  </div>
+
+  <!-- Botão Reset -->
+  <button id="resetar">Resetar Configurações</button>
 
   <script src="popup.js"></script>
+
 </body>
 </html>
+
+
 
