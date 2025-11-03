@@ -123,6 +123,76 @@ function removerModoSimplificado() {
   document.getElementById('modo-simplificado')?.remove();
 }
 
+// === MODO DISLÉXICO ===
+  function ativarModoDislexico() {
+    removerModoDislexico();
+    const style = document.createElement("style");
+    style.id = "modoDislexicoStyle";
+    style.textContent = `
+      @import url('https://fonts.cdnfonts.com/css/open-dyslexic');
+      p, li, article, section, h1, h2, h3, h4, h5, h6, span, a {
+        font-family: 'OpenDyslexic', Arial, sans-serif !important;
+        letter-spacing: 0.05em !important; /* menor que espaçado */
+        line-height: 1.6 !important;       /* menor que espaçado */
+        font-size: 1.05em !important;      /* leve aumento de fonte */
+      }
+    `;
+    document.head.appendChild(style);
+    log("Modo Disléxico aplicado");
+  }
+  function removerModoDislexico() {
+    document.getElementById('modoDislexicoStyle')?.remove();
+  }
+
+// Modo Padrão
+function ativarModoPadrao() {
+  // Remove o estilo específico do modo noturno suave, se existir
+  const style = document.getElementById("modoNoturnoSuaveStyle");
+  if (style) style.remove();
+
+  // Restaura estilos visuais principais
+  document.body.style.backgroundColor = "";
+  document.body.style.color = "";
+
+  // Remove filtros de daltonismo e restaura elementos
+  removerFiltrosDaltonismo();
+
+  // Restaura possíveis estilos aplicados em elementos
+  document.querySelectorAll("*").forEach(el => {
+    el.style.backgroundColor = "";
+    el.style.color = "";
+    el.style.filter = "";
+  });
+
+  console.log("Modo padrão restaurado");
+}
+function removerModoPadrao() {
+  // Nada a remover — ele é um estado base, não injeta estilos.
+}
+
+// Modo Noturno Suave
+function ativarModoNoturnoSuave() {
+  const style = document.createElement("style");
+  style.id = "modoNoturnoSuaveStyle";
+  style.textContent = `
+    body {
+      background-color: #1e1f22 !important;
+      color: #e4e6eb !important;
+    }
+    a, p, span, div, h1, h2, h3, h4, h5, h6 {
+      color: #e4e6eb !important;
+      background: none !important;
+    }
+    img, video {
+      opacity: 0.85 !important;
+    }
+  `;
+  document.head.appendChild(style);
+}
+function removerModoNoturnoSuave() {
+  document.getElementById("modoNoturnoSuaveStyle")?.remove();
+}
+
 // === FILTROS DE DALTONISMO ===
 function aplicarFiltroDaltonismo(tipo) {
   try {
@@ -163,6 +233,9 @@ function aplicarEstilos(data) {
     removerModoFoco();
     removerModoEspacado();
     removerModoSimplificado();
+    removerModoDislexico();
+    removerModoPadrao();
+    removerModoNoturnoSuave();
     removerFiltrosDaltonismo();
     return;
   }
@@ -172,10 +245,16 @@ function aplicarEstilos(data) {
   const modoFocoOn = !!(data && data.modoFoco);
   const modoEspacadoOn = !!(data && data.modoEspacado);
   const modoSimplificadoOn = !!(data && data.modoSimplificado);
+  const modoDislexicoOn = !!(data && data.modoDislexico);
+  const modoPadraoOn = !!(data && data.modoPadrao);
+  const modoNoturnoSuaveOn = !!(data && data.modoNoturnoSuave);
 
   if (modoFocoOn) aplicarModoFoco(); else removerModoFoco();
   if (modoEspacadoOn) aplicarModoEspacado(); else removerModoEspacado();
   if (modoSimplificadoOn) aplicarModoSimplificado(); else removerModoSimplificado();
+  if (modoDislexicoOn) ativarModoDislexico(); else removerModoDislexico();
+  if (modoPadraoOn) ativarModoPadrao(); else removerModoPadrao();
+  if (modoNoturnoSuaveOn) ativarModoNoturnoSuave(); else removerModoNoturnoSuave();
 
   // Daltonismo: limpa e aplica se necessário
   removerFiltrosDaltonismo();
@@ -186,7 +265,19 @@ function aplicarEstilos(data) {
 
 // === RECEBE MENSAGENS DO POPUP ===
 chrome.runtime.onMessage.addListener((msg) => {
-  if (msg && msg.action === "atualizarEstilo") {
+  if (!msg || !msg.action) return;
+
+  if (msg.action === "resetarEstilos") {
+  removerModoFoco();
+  removerModoEspacado();
+  removerModoSimplificado();
+  removerModoDislexico();
+  removerModoNoturnoSuave();
+  removerFiltrosDaltonismo();
+  ativarModoPadrao(); // garante fundo padrão imediatamente
+}
+
+  if (msg.action === "atualizarEstilo") {
     chrome.storage.sync.get(null, (data) => {
       try { aplicarEstilos(data); } catch (e) { console.warn("aplicarEstilos erro:", e); }
     });

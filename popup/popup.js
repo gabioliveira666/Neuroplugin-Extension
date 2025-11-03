@@ -3,6 +3,9 @@ document.addEventListener("DOMContentLoaded", function () {
     modoFoco: document.getElementById("modoFoco"),
     modoEspacado: document.getElementById("modoEspacado"),
     modoSimplificado: document.getElementById("modoSimplificado"),
+    modoDislexico: document.getElementById("modoDislexico"),
+    modoPadrao: document.getElementById("modoPadrao"),
+    modoNoturnoSuave: document.getElementById("modoNoturnoSuave"),
     protanomalia: document.getElementById("protanomalia"),
     deuteranomalia: document.getElementById("deuteranomalia"),
     tritanomalia: document.getElementById("tritanomalia"),
@@ -28,11 +31,7 @@ document.addEventListener("DOMContentLoaded", function () {
     chrome.storage.sync.set({ [key]: value }, () => {
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (tabs.length > 0) {
-          chrome.tabs.sendMessage(tabs[0].id, { action: "atualizarEstilo" }, (response) => {
-            if (chrome.runtime.lastError) {
-              console.warn("Content script não disponível");
-            }
-          });
+          chrome.tabs.sendMessage(tabs[0].id, { action: "atualizarEstilo" });
         }
       });
     });
@@ -40,31 +39,62 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // ---------- Carrega estado inicial ----------
   chrome.storage.sync.get(null, (data) => {
-    const extensaoAtiva = data.extensaoAtiva !== false; // padrão = true
+    const extensaoAtiva = data.extensaoAtiva !== false;
     setButtonState(btns.toggleExtensao, extensaoAtiva);
 
     [
-      "modoFoco", "modoEspacado", "modoSimplificado",
-      "protanomalia", "deuteranomalia", "tritanomalia"
+      "modoFoco", "modoEspacado", "modoSimplificado", "modoDislexico",
+      "modoPadrao", "modoNoturnoSuave", "protanomalia", "deuteranomalia", "tritanomalia"
     ].forEach((key) => {
       setButtonState(btns[key], data[key] || false);
     });
   });
 
-  // ---------- Toggle Extensão On/Off ----------
+  // ---------- Botão ON/OFF ----------
   btns.toggleExtensao.addEventListener("click", () => {
     const isOn = btns.toggleExtensao.textContent === "Off";
     setButtonState(btns.toggleExtensao, isOn);
-    saveAndUpdateStorage("extensaoAtiva", isOn);
+
+    if (!isOn) {
+      // OFF: desliga tudo e aplica modo padrão
+      const state = {
+        extensaoAtiva: false,
+        modoFoco: false,
+        modoEspacado: false,
+        modoSimplificado: false,
+        modoDislexico: false,
+        modoPadrao: true,
+        modoNoturnoSuave: false,
+        protanomalia: false,
+        deuteranomalia: false,
+        tritanomalia: false
+      };
+
+      Object.keys(btns).forEach(key => {
+        if (state[key] !== undefined) setButtonState(btns[key], state[key]);
+      });
+
+      chrome.storage.sync.set(state, () => {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          if (tabs.length > 0) {
+            chrome.tabs.sendMessage(tabs[0].id, { action: "atualizarEstilo", data: state });
+          }
+        });
+      });
+    } else {
+      // ON: apenas marca extensão como ativa
+      chrome.storage.sync.set({ extensaoAtiva: true });
+    }
   });
 
-  // ---------- Toggle modos ----------
+  // ---------- Toggle modos (exclui modoPadrao e modoNoturnoSuave) ----------
   [
-    "modoFoco", "modoEspacado", "modoSimplificado",
+    "modoFoco", "modoEspacado", "modoSimplificado", "modoDislexico",
     "protanomalia", "deuteranomalia", "tritanomalia"
   ].forEach((key) => {
     const btn = btns[key];
     if (!btn) return;
+
     btn.addEventListener("click", () => {
       const style = window.getComputedStyle(btn);
       const isOn = style.backgroundColor !== "rgb(76, 175, 80)"; // verde
@@ -73,36 +103,52 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   });
 
+  // ---------- Toggle exclusivo modoPadrao e modoNoturnoSuave ----------
+  ["modoPadrao", "modoNoturnoSuave"].forEach((key) => {
+    const btn = btns[key];
+    if (!btn) return;
+
+    btn.addEventListener("click", () => {
+      const outro = key === "modoPadrao" ? btns.modoNoturnoSuave : btns.modoPadrao;
+
+      // Sempre ativa o botão clicado
+      setButtonState(btn, true);
+      chrome.storage.sync.set({ [key]: true });
+
+      // Desativa o outro
+      setButtonState(outro, false);
+      chrome.storage.sync.set({ [outro === btns.modoPadrao ? "modoPadrao" : "modoNoturnoSuave"]: false });
+
+      // Atualiza content.js
+      saveAndUpdateStorage(key, true);
+    });
+  });
+
   // ---------- Botão Reset ----------
   btns.resetar.addEventListener("click", () => {
-    setButtonState(btns.toggleExtensao, false);
-
-    [
-      "modoFoco", "modoEspacado", "modoSimplificado",
-      "protanomalia", "deuteranomalia", "tritanomalia"
-    ].forEach((key) => {
-      setButtonState(btns[key], false);
-    });
-
-    const defaultState = {
+    const state = {
       extensaoAtiva: false,
       modoFoco: false,
       modoEspacado: false,
       modoSimplificado: false,
+      modoDislexico: false,
+      modoPadrao: true,
+      modoNoturnoSuave: false,
       protanomalia: false,
       deuteranomalia: false,
-      tritanomalia: false,
+      tritanomalia: false
     };
 
-    chrome.storage.sync.set(defaultState, () => {
-      // Consulta aba antes de enviar mensagem
+    // Atualiza botões
+    Object.keys(btns).forEach(key => {
+      if (state[key] !== undefined) setButtonState(btns[key], state[key]);
+    });
+
+    // Salva e aplica imediatamente
+    chrome.storage.sync.set(state, () => {
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (tabs.length > 0) {
-          chrome.tabs.sendMessage(tabs[0].id, { action: "atualizarEstilo" }, (response) => {
-            if (chrome.runtime.lastError) {
-              console.warn("Content script não disponível");
-            }
-          });
+          chrome.tabs.sendMessage(tabs[0].id, { action: "atualizarEstilo", data: state });
         }
       });
     });
